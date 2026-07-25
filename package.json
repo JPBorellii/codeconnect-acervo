@@ -1,0 +1,18 @@
+{
+  "name": "alura-engenharia-ia",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "scripts": {
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:lint": "pnpm --filter web lint",
+    "web:preview": "pnpm --filter web preview",
+    "api:dev": "pnpm --filter api start:dev",
+    "api:start": "pnpm --filter api start",
+    "api:build": "pnpm --filter api build",
+    "api:lint": "pnpm --filter api lint",
+    "api:test": "pnpm --filter api test",
+    "api:test:e2e": "pnpm --filter api test:e2e"
+  }
+}
