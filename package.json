@@ -7,6 +7,8 @@
     "web:dev": "pnpm --filter web dev",
     "web:build": "pnpm --filter web build",
     "web:lint": "pnpm --filter web lint",
+    "web:test": "pnpm --filter web test",
+    "web:test:watch": "pnpm --filter web test:watch",
     "web:preview": "pnpm --filter web preview",
     "api:dev": "pnpm --filter api start:dev",
     "api:start": "pnpm --filter api start",
