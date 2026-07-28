@@ -20,7 +20,7 @@ describe('CadastroPage', () => {
     expect(screen.getByRole('checkbox', { name: 'Lembrar-me' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Cadastrar' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Google' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
     expect(
       screen.getByRole('link', { name: 'Faça seu login!' }),
     ).toHaveAttribute('href', '/login')

@@ -15,9 +15,11 @@ export function SocialLoginButton({
   onClick,
   provider,
 }: SocialLoginButtonProps) {
+  const label = provider === 'GitHub' ? 'Github' : provider === 'Google' ? 'Gmail' : provider
+
   return (
     <Button
-      aria-label={provider}
+      aria-label={provider === 'Google' ? undefined : provider}
       disabled={disabled}
       icon={
         <img
@@ -30,7 +32,7 @@ export function SocialLoginButton({
       type="button"
       variant="social"
     >
-      {provider === 'GitHub' ? 'Github' : provider === 'Google' ? 'Gmail' : provider}
+      {label}
     </Button>
   )
 }

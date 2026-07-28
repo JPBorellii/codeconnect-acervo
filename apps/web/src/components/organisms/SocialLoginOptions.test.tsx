@@ -21,7 +21,7 @@ describe('SocialLoginOptions', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'GitHub' }))
-    await user.click(screen.getByRole('button', { name: 'Google' }))
+    await user.click(screen.getByRole('button', { name: 'Gmail' }))
     expect(onGitHubClick).toHaveBeenCalledOnce()
     expect(onGoogleClick).toHaveBeenCalledOnce()
     expect(onFormSubmit).not.toHaveBeenCalled()
@@ -30,6 +30,6 @@ describe('SocialLoginOptions', () => {
   it('marks providers unavailable when integrations are absent', () => {
     render(<SocialLoginOptions />)
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Google' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
   })
 })

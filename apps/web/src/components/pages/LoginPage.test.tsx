@@ -21,7 +21,7 @@ describe('LoginPage', () => {
       screen.getByRole('link', { name: 'Crie seu cadastro!' }),
     ).toHaveAttribute('href', '/cadastro')
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Google' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
   })
   it('has no accessibility violations after empty submission', async () => {
     const { container } = render(

@@ -21,8 +21,8 @@ describe('SocialLoginButton', () => {
 
   it('supports an unavailable state', () => {
     render(
-      <SocialLoginButton disabled iconSrc="/github.png" provider="GitHub" />,
+      <SocialLoginButton disabled iconSrc="/gmail.png" provider="Google" />,
     )
-    expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
   })
 })
