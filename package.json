@@ -10,6 +10,7 @@
     "web:test": "pnpm --filter web test",
     "web:test:watch": "pnpm --filter web test:watch",
     "web:preview": "pnpm --filter web preview",
+    "web:lhci": "pnpm --filter web build && pnpm --filter web lhci",
     "api:dev": "pnpm --filter api start:dev",
     "api:start": "pnpm --filter api start",
     "api:build": "pnpm --filter api build",

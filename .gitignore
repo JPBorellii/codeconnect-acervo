@@ -22,6 +22,8 @@ coverage/
 .tmp/
 .turbo/
 .vite/
+.lighthouseci/
+lhci-reports/
 tmp/
 *.temp
 *.tmp
