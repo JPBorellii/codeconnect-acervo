@@ -57,6 +57,10 @@ Name React components and their files in PascalCase. Keep components focused and
 
 Tailwind CSS will be the standard styling approach once it is installed. Do not install Tailwind as part of unrelated work or until the user explicitly authorizes the dependency change. When Tailwind is available, prefer utility classes over creating new global CSS files. Regardless of styling approach, preserve semantic HTML, accessible behavior, and clearly visible keyboard focus states.
 
+## Design Tokens
+
+Global design tokens belong in the `@theme` block of `apps/web/src/index.css`. Name tokens for semantic roles, reuse existing tokens before creating new ones, and do not create different aliases for the same role. Preserve exact Figma measurements; unique structural values may remain arbitrary in the component. `--color-surface` corresponds to `#171d1f`, never `#271d1f`. Changes to tokens require visual validation of both Login and Cadastro.
+
 ## Testing Guidelines
 
 Jest and `ts-jest` cover the API. Name colocated unit tests `*.spec.ts` and end-to-end tests `*.e2e-spec.ts`. Add tests for new routes, service behavior, and regressions. There is currently no frontend test runner; at minimum, run `pnpm web:build` and manually verify affected UI behavior.

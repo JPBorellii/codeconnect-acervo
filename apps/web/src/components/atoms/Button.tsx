@@ -14,7 +14,7 @@ export function Button({
 }: ButtonProps) {
   const variants = {
     primary:
-      'h-[50px] w-full bg-accent px-6 text-base font-semibold text-accent-ink hover:bg-[#a4ffaa]',
+      'h-[50px] w-full bg-accent px-6 text-base font-semibold text-accent-ink hover:bg-accent-hover',
     social:
       'min-w-20 flex-col gap-1.5 bg-transparent px-2 py-1 text-xs font-normal text-copy hover:bg-white/5 disabled:cursor-default disabled:opacity-100',
   }

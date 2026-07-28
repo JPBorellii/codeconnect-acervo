@@ -4,11 +4,22 @@
   --color-page: #00090e;
   --color-surface: #171d1f;
   --color-field: #888888;
+  --color-field-ink: #172126;
+  --color-field-placeholder: #3c4548;
   --color-copy: #e1e1e1;
   --color-muted: #a5a5a5;
   --color-accent: #81fe88;
+  --color-accent-hover: #a4ffaa;
   --color-accent-ink: #132e35;
   --color-pattern: #0b1b21;
+  --text-auth-title: 31px;
+  --text-auth-title--line-height: 1.5;
+  --text-auth-subtitle: 22px;
+  --text-auth-subtitle--line-height: 1.5;
+  --text-auth-control: 18px;
+  --text-auth-control--line-height: 1.5;
+  --text-auth-body: 15px;
+  --text-auth-body--line-height: 1.5;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
 }

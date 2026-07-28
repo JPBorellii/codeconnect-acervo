@@ -69,18 +69,18 @@ export function CadastroForm({
   }
 
   const fieldClassName =
-    'h-[39px] rounded-[4px] px-4 py-2 text-[15px] leading-[1.5]'
-  const labelClassName = 'text-[18px] leading-[1.5]'
+    'h-[39px] rounded-[4px] px-4 py-2 text-auth-body'
+  const labelClassName = 'text-auth-control'
 
   return (
     <section aria-labelledby="cadastro-title">
       <h1
-        className="text-[31px] font-semibold leading-[1.5] text-copy"
+        className="text-auth-title font-semibold text-copy"
         id="cadastro-title"
       >
         Cadastro
       </h1>
-      <p className="mt-6 text-[22px] font-normal leading-[1.5] text-copy">
+      <p className="mt-6 text-auth-subtitle font-normal text-copy">
         Olá! Preencha seus dados.
       </p>
 
@@ -127,7 +127,7 @@ export function CadastroForm({
               <Checkbox
                 boxClassName="size-6"
                 className="size-6"
-                containerClassName="text-[15px] leading-[1.5] text-field"
+                containerClassName="text-auth-body text-field"
                 id="cadastro-rememberMe"
                 label="Lembrar-me"
                 name="rememberMe"
@@ -138,7 +138,7 @@ export function CadastroForm({
 
         <div className="mt-8">
           <Button
-            className="h-[51px] text-[18px] leading-[1.5]"
+            className="h-[51px] text-auth-control"
             disabled={isSubmitting}
             type="submit"
           >

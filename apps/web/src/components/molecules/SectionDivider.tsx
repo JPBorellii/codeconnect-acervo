@@ -8,7 +8,7 @@ export function SectionDivider({ variant = 'default' }: SectionDividerProps) {
   return (
     <div
       className={`flex items-center text-center font-normal text-copy ${
-        isFigma ? 'gap-4 text-[15px] leading-[1.5]' : 'gap-3 text-xs'
+        isFigma ? 'gap-4 text-auth-body' : 'gap-3 text-xs'
       }`}
     >
       <span aria-hidden="true" className="h-px flex-1 bg-copy/70" />

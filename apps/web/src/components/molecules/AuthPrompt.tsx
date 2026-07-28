@@ -58,7 +58,7 @@ export function AuthPrompt({
       <p
         className={
           isInline
-            ? 'text-[18px] font-normal leading-[1.5] text-copy'
+            ? 'text-auth-control font-normal text-copy'
             : 'text-sm font-normal text-copy'
         }
       >
@@ -68,7 +68,7 @@ export function AuthPrompt({
         <TextLink
           className={`items-center text-accent ${
             isInline
-              ? 'inline-flex gap-3 text-[18px] leading-[1.5]'
+              ? 'inline-flex gap-3 text-auth-control'
               : 'inline-flex justify-center gap-2 text-base'
           }`}
           to={destination}
