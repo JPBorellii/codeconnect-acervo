@@ -20,6 +20,7 @@ export function LoginPage() {
         <SocialLoginOptions />
         <AuthPrompt
           action="Crie seu cadastro!"
+          destination="/cadastro"
           message="Ainda não tem conta?"
         />
       </div>

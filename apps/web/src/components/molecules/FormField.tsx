@@ -2,17 +2,21 @@ import type { InputHTMLAttributes } from 'react'
 import { TextInput } from '../atoms/TextInput'
 
 type FormFieldProps = InputHTMLAttributes<HTMLInputElement> & {
+  containerClassName?: string
   error?: string
   helperText?: string
   id: string
   label: string
+  labelClassName?: string
 }
 
 export function FormField({
+  containerClassName = '',
   error,
   helperText,
   id,
   label,
+  labelClassName = '',
   ...inputProps
 }: FormFieldProps) {
   const descriptionId = error
@@ -22,8 +26,11 @@ export function FormField({
       : undefined
 
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-normal text-copy" htmlFor={id}>
+    <div className={`space-y-1.5 ${containerClassName}`}>
+      <label
+        className={`block text-sm font-normal text-copy ${labelClassName}`}
+        htmlFor={id}
+      >
         {label}
       </label>
       <TextInput

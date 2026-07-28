@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { AppRoutes } from './AppRoutes'
@@ -25,6 +26,25 @@ describe('AppRoutes', () => {
 
   it('redirects / to /login', () => {
     renderRoutes('/')
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
+  })
+
+  it('renders CadastroPage at /cadastro', () => {
+    renderRoutes('/cadastro')
+    expect(screen.getByRole('heading', { name: 'Cadastro' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/cadastro')
+  })
+
+  it('navigates from login to cadastro and back to login', async () => {
+    const user = userEvent.setup()
+    renderRoutes('/login')
+
+    await user.click(screen.getByRole('link', { name: 'Crie seu cadastro!' }))
+    expect(screen.getByRole('heading', { name: 'Cadastro' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/cadastro')
+
+    await user.click(screen.getByRole('link', { name: 'Faça seu login!' }))
     expect(screen.getByRole('heading', { name: 'Login' })).toBeVisible()
     expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
   })
