@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { axe } from 'jest-axe'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { LoginPage } from './LoginPage'
@@ -20,5 +22,16 @@ describe('LoginPage', () => {
     ).toHaveAttribute('href', '/cadastro')
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Google' })).toBeDisabled()
+  })
+  it('has no accessibility violations after empty submission', async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/login']}>
+        <LoginPage />
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Login' }))
+
+    expect(await axe(container)).toHaveNoViolations()
   })
 })
