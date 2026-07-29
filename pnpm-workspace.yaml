@@ -2,4 +2,6 @@ packages:
   - "apps/*"
 confirmModulesPurge: false
 allowBuilds:
+  '@scarf/scarf': false
+  bcrypt: true
   unrs-resolver: true
