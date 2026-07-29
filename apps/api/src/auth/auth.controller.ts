@@ -24,6 +24,7 @@ import { CurrentUser } from './current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import {
+  ConflictErrorResponseDto,
   ErrorResponseDto,
   LoginResponseDto,
   PublicUserResponseDto,
@@ -44,7 +45,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Cria uma conta de usuário' })
   @ApiCreatedResponse({ type: PublicUserResponseDto })
   @ApiBadRequestResponse({ type: ValidationErrorResponseDto })
-  @ApiConflictResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({ type: ConflictErrorResponseDto })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }

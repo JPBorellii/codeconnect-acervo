@@ -46,3 +46,11 @@ export class ErrorResponseDto {
   @ApiProperty({ example: 'Não autorizado' })
   message!: string;
 }
+
+export class ConflictErrorResponseDto {
+  @ApiProperty({ example: 409 })
+  statusCode!: number;
+
+  @ApiProperty({ example: 'E-mail já cadastrado' })
+  message!: string;
+}
