@@ -1,0 +1,61 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    paths:
+      - apps/web/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/lighthouse.yml
+  push:
+    branches:
+      - main
+    paths:
+      - apps/web/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/lighthouse.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.17.0
+          run_install: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm web:lint
+
+      - run: pnpm web:test
+
+      - run: pnpm web:lhci
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lighthouse-${{ github.run_number }}
+          path: apps/web/lhci-reports/**
+          retention-days: 14
+          if-no-files-found: ignore
