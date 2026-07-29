@@ -44,6 +44,10 @@ export function CadastroForm({
     }
     if (!passwordInput.value) {
       nextErrors.password = 'Informe sua senha.'
+    } else if (passwordInput.value.length < 8) {
+      nextErrors.password = 'A senha deve ter pelo menos 8 caracteres.'
+    } else if (new TextEncoder().encode(passwordInput.value).length > 72) {
+      nextErrors.password = 'A senha deve ter no máximo 72 bytes.'
     }
 
     setErrors(nextErrors)

@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { AuthPrompt } from '../molecules/AuthPrompt'
 import { LoginForm, type LoginValues } from '../organisms/LoginForm'
 import { SocialLoginOptions } from '../organisms/SocialLoginOptions'
@@ -5,9 +7,23 @@ import { AuthTemplate } from '../templates/AuthTemplate'
 
 export function LoginPage() {
   const baseUrl = import.meta.env.BASE_URL
+  const location = useLocation()
+  const navigate = useNavigate()
+  const successRef = useRef<HTMLParagraphElement>(null)
+  const registrationComplete = Boolean(
+    (location.state as { registrationComplete?: boolean } | null)?.registrationComplete,
+  )
+  const [showCompletion, setShowCompletion] = useState(registrationComplete)
+
+  useEffect(() => {
+    if (!registrationComplete) return
+    setShowCompletion(true)
+    successRef.current?.focus()
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, navigate, registrationComplete])
 
   function handleLogin(_values: LoginValues) {
-    // A autenticação será conectada quando houver um contrato de API aprovado.
+    // Login will be connected in a later phase.
   }
 
   return (
@@ -30,6 +46,17 @@ export function LoginPage() {
       }}
     >
       <div className="space-y-8">
+        {showCompletion ? (
+          <p
+            aria-live="polite"
+            className="text-auth-body text-copy"
+            ref={successRef}
+            role="status"
+            tabIndex={-1}
+          >
+            Cadastro concluído. Faça login para continuar.
+          </p>
+        ) : null}
         <LoginForm onSubmit={handleLogin} />
         <SocialLoginOptions />
         <AuthPrompt

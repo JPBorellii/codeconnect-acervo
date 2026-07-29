@@ -29,14 +29,14 @@ describe('CadastroForm', () => {
 
     await user.type(screen.getByLabelText('Nome'), '  Ada Lovelace  ')
     await user.type(screen.getByLabelText('Email'), '  ada@example.com  ')
-    await user.type(screen.getByLabelText('Senha'), 'segredo')
+    await user.type(screen.getByLabelText('Senha'), 'segredo1')
     await user.click(screen.getByRole('checkbox', { name: 'Lembrar-me' }))
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
 
     expect(onSubmit).toHaveBeenCalledWith({
       email: 'ada@example.com',
       name: 'Ada Lovelace',
-      password: 'segredo',
+      password: 'segredo1',
       rememberMe: true,
     })
   })
@@ -61,11 +61,28 @@ describe('CadastroForm', () => {
 
     await user.type(screen.getByLabelText('Nome'), 'Ada Lovelace')
     await user.type(screen.getByLabelText('Email'), 'email-invalido')
-    await user.type(screen.getByLabelText('Senha'), 'segredo')
+    await user.type(screen.getByLabelText('Senha'), 'segredo1')
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
 
     expect(onSubmit).not.toHaveBeenCalled()
     expect(screen.getByText('Informe um email válido.')).toBeVisible()
     expect(screen.getByLabelText('Email')).toHaveFocus()
+  })
+
+  it('validates password length in characters and UTF-8 bytes', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(<CadastroForm onSubmit={onSubmit} />)
+    await user.type(screen.getByLabelText('Nome'), 'Ada Lovelace')
+    await user.type(screen.getByLabelText('Email'), 'ada@example.com')
+    await user.type(screen.getByLabelText('Senha'), 'short')
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
+    expect(screen.getByText('A senha deve ter pelo menos 8 caracteres.')).toBeVisible()
+
+    await user.clear(screen.getByLabelText('Senha'))
+    await user.type(screen.getByLabelText('Senha'), 'á'.repeat(37))
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
+    expect(screen.getByText('A senha deve ter no máximo 72 bytes.')).toBeVisible()
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 })
