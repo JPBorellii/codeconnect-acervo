@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import dataSource from '../src/database/data-source';
 import { setupApp } from '../src/app.setup';
 import { UsersService } from '../src/users/users.service';
 
@@ -12,6 +13,9 @@ describe('Authentication (e2e)', () => {
   let usersService: UsersService;
 
   beforeAll(async () => {
+    await dataSource.initialize();
+    await dataSource.runMigrations();
+    await dataSource.destroy();
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

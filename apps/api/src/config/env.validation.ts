@@ -8,6 +8,7 @@ import {
   MinLength,
   validateSync,
 } from 'class-validator';
+import { createDatabaseConfig } from '../database/database.config';
 
 class EnvironmentVariables {
   @Transform(({ value }) => Number(value ?? 3000))
@@ -53,6 +54,8 @@ export function validate(
     const fields = errors.map((error) => error.property).join(', ');
     throw new Error(`Invalid environment configuration: ${fields}`);
   }
+
+  createDatabaseConfig(config);
 
   return environment;
 }
