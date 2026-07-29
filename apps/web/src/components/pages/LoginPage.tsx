@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { authService } from '../../services/auth/auth.service'
+import type { PublicUser } from '../../services/auth/auth.types'
+import { ApiError } from '../../services/http/ApiError'
 import { AuthPrompt } from '../molecules/AuthPrompt'
 import { LoginForm, type LoginValues } from '../organisms/LoginForm'
 import { SocialLoginOptions } from '../organisms/SocialLoginOptions'
@@ -14,6 +17,11 @@ export function LoginPage() {
     (location.state as { registrationComplete?: boolean } | null)?.registrationComplete,
   )
   const [showCompletion, setShowCompletion] = useState(registrationComplete)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submissionError, setSubmissionError] = useState<string>()
+  const [authenticatedUser, setAuthenticatedUser] = useState<PublicUser>()
+  const [passwordClearSignal, setPasswordClearSignal] = useState(0)
+  const errorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
     if (!registrationComplete) return
@@ -22,8 +30,30 @@ export function LoginPage() {
     navigate(location.pathname, { replace: true, state: null })
   }, [location.pathname, navigate, registrationComplete])
 
-  function handleLogin(_values: LoginValues) {
-    // Login will be connected in a later phase.
+  async function handleLogin(values: LoginValues) {
+    if (isSubmitting) return
+    setSubmissionError(undefined)
+    setAuthenticatedUser(undefined)
+    setShowCompletion(false)
+    setIsSubmitting(true)
+
+    let isValidatingSession = false
+    try {
+      const { accessToken } = await authService.login({
+        email: values.email,
+        password: values.password,
+      })
+      isValidatingSession = true
+      const user = await authService.getMe(accessToken)
+      setAuthenticatedUser(user)
+      setPasswordClearSignal((signal) => signal + 1)
+      requestAnimationFrame(() => successRef.current?.focus())
+    } catch (error) {
+      setSubmissionError(getLoginError(error, isValidatingSession))
+      requestAnimationFrame(() => errorRef.current?.focus())
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -57,7 +87,33 @@ export function LoginPage() {
             Cadastro concluído. Faça login para continuar.
           </p>
         ) : null}
-        <LoginForm onSubmit={handleLogin} />
+        {authenticatedUser ? (
+          <p
+            aria-live="polite"
+            className="text-auth-body text-copy"
+            ref={successRef}
+            role="status"
+            tabIndex={-1}
+          >
+            Login realizado com sucesso. Olá, {authenticatedUser.name}.
+          </p>
+        ) : null}
+        {submissionError ? (
+          <p
+            aria-live="assertive"
+            className="text-auth-body text-red-300"
+            ref={errorRef}
+            role="alert"
+            tabIndex={-1}
+          >
+            {submissionError}
+          </p>
+        ) : null}
+        <LoginForm
+          isSubmitting={isSubmitting}
+          onSubmit={handleLogin}
+          passwordClearSignal={passwordClearSignal}
+        />
         <SocialLoginOptions />
         <AuthPrompt
           action="Crie seu cadastro!"
@@ -67,4 +123,15 @@ export function LoginPage() {
       </div>
     </AuthTemplate>
   )
+}
+
+function getLoginError(error: unknown, isValidatingSession: boolean) {
+  if (!(error instanceof ApiError)) return 'Não foi possível realizar o login. Tente novamente.'
+  if (isValidatingSession && error.status === 401) {
+    return 'Não foi possível validar sua sessão. Faça login novamente.'
+  }
+  if (error.status === 401) return 'Email ou senha inválidos.'
+  if (error.category === 'timeout') return 'A solicitação demorou demais. Tente novamente.'
+  if (error.category === 'network') return 'Não foi possível conectar ao servidor. Tente novamente.'
+  return 'Não foi possível realizar o login. Tente novamente.'
 }

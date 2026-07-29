@@ -1,44 +1,54 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from '../atoms/Button'
 import { Checkbox } from '../atoms/Checkbox'
 import { FormField } from '../molecules/FormField'
 
 export type LoginValues = {
-  identity: string
+  email: string
   password: string
-  rememberMe: boolean
 }
 
 type LoginFormProps = {
   isSubmitting?: boolean
   onSubmit: (values: LoginValues) => void
+  passwordClearSignal?: number
 }
 
-type LoginErrors = Partial<Record<'identity' | 'password', string>>
+type LoginErrors = Partial<Record<'email' | 'password', string>>
 
-export function LoginForm({ isSubmitting = false, onSubmit }: LoginFormProps) {
+export function LoginForm({ isSubmitting = false, onSubmit, passwordClearSignal = 0 }: LoginFormProps) {
   const [errors, setErrors] = useState<LoginErrors>({})
+  const [password, setPassword] = useState('')
+
+  useEffect(() => {
+    setPassword('')
+  }, [passwordClearSignal])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
-    const identityInput = form.elements.namedItem('identity') as HTMLInputElement
+    if (isSubmitting) return
+    const emailInput = form.elements.namedItem('email') as HTMLInputElement
     const passwordInput = form.elements.namedItem('password') as HTMLInputElement
-    const rememberInput = form.elements.namedItem(
-      'rememberMe',
-    ) as HTMLInputElement
     const nextErrors: LoginErrors = {}
 
-    if (!identityInput.value.trim()) {
-      nextErrors.identity = 'Informe seu email ou usuário.'
+    const email = emailInput.value.trim()
+    if (!email) {
+      nextErrors.email = 'Informe seu email.'
+    } else if (!emailInput.validity.valid) {
+      nextErrors.email = 'Informe um email válido.'
     }
     if (!passwordInput.value) {
       nextErrors.password = 'Informe sua senha.'
+    } else if (passwordInput.value.length < 8) {
+      nextErrors.password = 'A senha deve ter pelo menos 8 caracteres.'
+    } else if (new TextEncoder().encode(passwordInput.value).length > 72) {
+      nextErrors.password = 'A senha deve ter no máximo 72 bytes.'
     }
 
     setErrors(nextErrors)
-    if (nextErrors.identity) {
-      identityInput.focus()
+    if (nextErrors.email) {
+      emailInput.focus()
       return
     }
     if (nextErrors.password) {
@@ -47,9 +57,8 @@ export function LoginForm({ isSubmitting = false, onSubmit }: LoginFormProps) {
     }
 
     onSubmit({
-      identity: identityInput.value.trim(),
+      email,
       password: passwordInput.value,
-      rememberMe: rememberInput.checked,
     })
   }
 
@@ -65,13 +74,13 @@ export function LoginForm({ isSubmitting = false, onSubmit }: LoginFormProps) {
       <form className="mt-[52px]" noValidate onSubmit={handleSubmit}>
         <div className="space-y-[27px]">
           <FormField
-            autoComplete="username"
-            error={errors.identity}
-            id="identity"
-            label="Email ou usuário"
-            name="identity"
+            autoComplete="email"
+            error={errors.email}
+            id="email"
+            label="Email"
+            name="email"
             required
-            type="text"
+            type="email"
           />
           <FormField
             autoComplete="current-password"
@@ -79,8 +88,10 @@ export function LoginForm({ isSubmitting = false, onSubmit }: LoginFormProps) {
             id="password"
             label="Senha"
             name="password"
+            onChange={(event) => setPassword(event.target.value)}
             required
             type="password"
+            value={password}
           />
         </div>
 

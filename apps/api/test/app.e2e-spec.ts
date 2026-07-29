@@ -87,6 +87,8 @@ describe('Authentication (e2e)', () => {
       .set('Authorization', `Bearer ${loginBody.accessToken}`)
       .expect(200);
     expect((me.body as { email: string }).email).toBe('maria@example.com');
+    expect(me.headers['cache-control']).toBe('no-store');
+    expect(me.headers.pragma).toBe('no-cache');
   });
 
   it('uses a generic message for invalid credentials', async () => {

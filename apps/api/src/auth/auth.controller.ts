@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Post,
@@ -61,6 +62,8 @@ export class AuthController {
   }
 
   @Get('me')
+  @Header('Cache-Control', 'no-store')
+  @Header('Pragma', 'no-cache')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Obtém o usuário autenticado' })
