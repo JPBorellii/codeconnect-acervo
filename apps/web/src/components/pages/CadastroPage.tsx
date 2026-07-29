@@ -16,8 +16,14 @@ export function CadastroPage() {
   return (
     <AuthTemplate
       bannerAlt="Profissional trabalhando diante de telas de monitoramento"
+      banner={{
+        avif: { srcSet: `${baseUrl}banner-cadastro.avif` },
+        fallbackSrc: `${baseUrl}banner-cadastro.png`,
+        height: 675,
+        webp: { srcSet: `${baseUrl}banner-cadastro.webp` },
+        width: 407,
+      }}
       bannerLogoSrc={`${baseUrl}logo-codeconnect-cadastro.png`}
-      bannerSrc={`${baseUrl}banner-cadastro.png`}
       patternBottomSrc={`${baseUrl}grafismo-cadastro-inferior.png`}
       patternTopSrc={`${baseUrl}grafismo-cadastro-superior.png`}
       variant="cadastro"

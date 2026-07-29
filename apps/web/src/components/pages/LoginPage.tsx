@@ -13,7 +13,21 @@ export function LoginPage() {
   return (
     <AuthTemplate
       bannerAlt="Pessoa em um ambiente tecnológico da CodeConnect"
-      bannerSrc={`${baseUrl}banner-login.png`}
+      banner={{
+        avif: {
+          sizes:
+            '(max-width: 639px) calc(100vw - 64px), (max-width: 1023px) calc(100vw - 112px), 407px',
+          srcSet: `${baseUrl}banner-login-407.avif 407w, ${baseUrl}banner-login-814.avif 814w`,
+        },
+        fallbackSrc: `${baseUrl}banner-login.png`,
+        height: 1272,
+        webp: {
+          sizes:
+            '(max-width: 639px) calc(100vw - 64px), (max-width: 1023px) calc(100vw - 112px), 407px',
+          srcSet: `${baseUrl}banner-login-407.webp 407w, ${baseUrl}banner-login-814.webp 814w`,
+        },
+        width: 814,
+      }}
     >
       <div className="space-y-8">
         <LoginForm onSubmit={handleLogin} />

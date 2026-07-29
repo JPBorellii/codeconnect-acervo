@@ -1,9 +1,22 @@
 import type { ReactNode } from 'react'
 
+type BannerSource = {
+  sizes?: string
+  srcSet: string
+}
+
+type AuthBanner = {
+  avif: BannerSource
+  fallbackSrc: string
+  height: number
+  webp: BannerSource
+  width: number
+}
+
 type AuthTemplateProps = {
   bannerAlt: string
+  banner: AuthBanner
   bannerLogoSrc?: string
-  bannerSrc: string
   children: ReactNode
   patternBottomSrc?: string
   patternTopSrc?: string
@@ -12,8 +25,8 @@ type AuthTemplateProps = {
 
 export function AuthTemplate({
   bannerAlt,
+  banner,
   bannerLogoSrc,
-  bannerSrc,
   children,
   patternBottomSrc,
   patternTopSrc,
@@ -131,15 +144,29 @@ export function AuthTemplate({
           }`}
         >
           <div className="relative h-full w-full">
-            <img
-              alt={bannerAlt}
-              className={`h-full w-full rounded-sm object-cover object-[center_42%] sm:object-[center_40%] ${
-                isCadastro
-                  ? 'lg:object-cover lg:object-center xl:mt-1 xl:h-[675px]'
-                  : 'lg:object-contain lg:object-center'
-              }`}
-              src={bannerSrc}
-            />
+            <picture className="contents">
+              <source
+                sizes={banner.avif.sizes}
+                srcSet={banner.avif.srcSet}
+                type="image/avif"
+              />
+              <source
+                sizes={banner.webp.sizes}
+                srcSet={banner.webp.srcSet}
+                type="image/webp"
+              />
+              <img
+                alt={bannerAlt}
+                className={`h-full w-full rounded-sm object-cover object-[center_42%] sm:object-[center_40%] ${
+                  isCadastro
+                    ? 'lg:object-cover lg:object-center xl:mt-1 xl:h-[675px]'
+                    : 'lg:object-contain lg:object-center'
+                }`}
+                height={banner.height}
+                src={banner.fallbackSrc}
+                width={banner.width}
+              />
+            </picture>
             {bannerLogoSrc ? (
               <img
                 alt="CodeConnect"

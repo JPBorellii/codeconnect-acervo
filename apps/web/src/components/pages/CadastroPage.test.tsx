@@ -19,6 +19,13 @@ describe('CadastroPage', () => {
     expect(screen.getByLabelText('Senha')).toBeRequired()
     expect(screen.getByRole('checkbox', { name: 'Lembrar-me' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Cadastrar' })).toBeEnabled()
+    const sources = document.querySelectorAll('picture > source')
+
+    expect(sources).toHaveLength(2)
+    expect(sources[0]).toHaveAttribute('type', 'image/avif')
+    expect(sources[0]).toHaveAttribute('srcset', '/banner-cadastro.avif')
+    expect(sources[1]).toHaveAttribute('type', 'image/webp')
+    expect(sources[1]).toHaveAttribute('srcset', '/banner-cadastro.webp')
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
     expect(

@@ -22,6 +22,22 @@ describe('LoginPage', () => {
     ).toHaveAttribute('href', '/cadastro')
     expect(screen.getByRole('button', { name: 'GitHub' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Gmail' })).toBeDisabled()
+    const sources = document.querySelectorAll('picture > source')
+
+    expect(sources[0]).toHaveAttribute('type', 'image/avif')
+    expect(sources[0]).toHaveAttribute(
+      'srcset',
+      '/banner-login-407.avif 407w, /banner-login-814.avif 814w',
+    )
+    expect(sources[0]).toHaveAttribute(
+      'sizes',
+      '(max-width: 639px) calc(100vw - 64px), (max-width: 1023px) calc(100vw - 112px), 407px',
+    )
+    expect(sources[1]).toHaveAttribute('type', 'image/webp')
+    expect(sources[1]).toHaveAttribute(
+      'srcset',
+      '/banner-login-407.webp 407w, /banner-login-814.webp 814w',
+    )
   })
   it('has no accessibility violations after empty submission', async () => {
     const { container } = render(
