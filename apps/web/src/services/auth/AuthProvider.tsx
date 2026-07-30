@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { AuthContext, type AuthStatus } from './auth-context'
 import { SessionValidationError } from './auth-errors'
+import { ApiError } from '../http/ApiError'
 import { authService } from './auth.service'
 import { authStorage } from './auth-storage'
 import type { LoginRequest, PublicUser } from './auth.types'
+import { apiClient, type ApiRequestOptions } from '../http/apiClient'
 
 function isPublicUser(value: unknown): value is PublicUser {
   if (!value || typeof value !== 'object') return false
@@ -81,5 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate('/feed', { replace: true })
   }, [clearSession, navigate])
 
-  return <AuthContext.Provider value={{ isAuthenticated: status === 'authenticated', login, logout, refreshCurrentUser, status, user }}>{children}</AuthContext.Provider>
+  const authorizedRequest = useCallback(async <T,>(path: string, options: ApiRequestOptions = {}) => {
+    const accessToken = authStorage.getAccessToken()
+    if (!accessToken) throw new SessionValidationError()
+    const headers = new Headers(options.headers)
+    headers.set('Authorization', `Bearer ${accessToken}`)
+    try {
+      return await apiClient<T>(path, { ...options, headers })
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) clearSession()
+      throw error
+    }
+  }, [clearSession])
+
+  return <AuthContext.Provider value={{ authorizedRequest, isAuthenticated: status === 'authenticated', login, logout, refreshCurrentUser, status, user }}>{children}</AuthContext.Provider>
 }
