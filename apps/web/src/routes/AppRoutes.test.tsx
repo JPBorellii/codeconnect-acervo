@@ -66,11 +66,11 @@ describe('AppRoutes', () => {
     expect(screen.getByLabelText('Estado atual')).toHaveTextContent('/perfil')
   })
 
-  it('renders a protected placeholder after restoring a valid session', async () => {
+  it('renders the publish form after restoring a valid session', async () => {
     authStorage.setAccessToken('saved-token')
     vi.mocked(authService.getMe).mockResolvedValue({ id: '1', name: 'Ada', email: 'ada@example.com', createdAt: '2026-01-01' })
     renderRoutes('/publicar')
-    expect(await screen.findByRole('heading', { name: 'Publicar' })).toBeVisible()
-    expect(screen.getByRole('link', { name: 'Voltar ao feed' })).toHaveAttribute('href', '/feed')
+    expect(await screen.findByRole('heading', { name: 'Nova publicação' })).toBeVisible()
+    expect(screen.getByRole('textbox', { name: 'Título da publicação *' })).toBeVisible()
   })
 })
