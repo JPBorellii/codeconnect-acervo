@@ -1,0 +1,70 @@
+{
+  "files": [
+    {
+      "file": "docs/design/references/codeconnect/figma-components-board.png",
+      "width": 2048,
+      "height": 588,
+      "sha256": "31b8614a0f456756dd9de0f808c1c1abdc21d9d4c90de5fb2be7a342ace1d9a4"
+    },
+    {
+      "file": "docs/design/references/codeconnect/figma-style-guide.png",
+      "width": 2048,
+      "height": 1306,
+      "sha256": "67eaae9ff64e6f4b8b14e2e86c53b4096526848c994525649ef5a00a4e65ba72"
+    },
+    {
+      "file": "docs/design/references/codeconnect/post-details-authenticated-mobile.png",
+      "width": 289,
+      "height": 2048,
+      "sha256": "8dde54f984eac3054ffe4f31eccbfea0ef7a1ad587a3020d2d4c8bce84dbf9f6"
+    },
+    {
+      "file": "docs/design/references/codeconnect/post-details-authenticated-tablet.png",
+      "width": 749,
+      "height": 2048,
+      "sha256": "55dfda5d4e1024af398cdbf7ac49afd112cbbd4001c65a9efb27a3c38c5e9d2c"
+    },
+    {
+      "file": "docs/design/references/codeconnect/post-details-authenticated-desktop-1920.png",
+      "width": 1920,
+      "height": 1834,
+      "sha256": "60f251ebd04051200171ae8c00adbe935443232e2b1cf3aa10fc364f231a35fc"
+    },
+    {
+      "file": "docs/design/references/codeconnect/about-mobile.png",
+      "width": 262,
+      "height": 2048,
+      "sha256": "e46ea4b52867a9488ae3e65a17a24f46682f6eb61c42db738f306e7e019cc6fa"
+    },
+    {
+      "file": "docs/design/references/codeconnect/about-tablet.png",
+      "width": 662,
+      "height": 2048,
+      "sha256": "55b30fcf9a71cb401264487e6e497e9c4d492f2bf0482ca77f2f1105d007fb6a"
+    },
+    {
+      "file": "docs/design/references/codeconnect/about-desktop-1920.png",
+      "width": 1920,
+      "height": 1690,
+      "sha256": "37d21d7d4eecec3e82b0c2600a4cc22ea194c7915af44a0dfe48112fff73517b"
+    },
+    {
+      "file": "docs/design/references/codeconnect/publish-mobile-360.png",
+      "width": 360,
+      "height": 1685,
+      "sha256": "3ea153b00aaa3b8d16bd0d1659cd952fb8a86fcf850776a9f84c24b1fffb2881"
+    },
+    {
+      "file": "docs/design/references/codeconnect/publish-tablet-768.png",
+      "width": 768,
+      "height": 1685,
+      "sha256": "08cbcba189de7c889e520d4b067708081b03bd5ff479765b993ddf09ccdd3438"
+    },
+    {
+      "file": "docs/design/references/codeconnect/publish-desktop-1920.png",
+      "width": 1920,
+      "height": 1068,
+      "sha256": "902529db6d28b6c13622a6a54cde40beca55667766fdde7915d1cf62e8e75a60"
+    }
+  ]
+}
