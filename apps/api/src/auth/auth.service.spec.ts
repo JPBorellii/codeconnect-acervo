@@ -50,7 +50,7 @@ describe('AuthService', () => {
   it('hashes the password and creates a public user', async () => {
     bcryptMock.hash.mockResolvedValue('hashed-password');
     configService.getOrThrow.mockReturnValue(12);
-    usersService.create.mockReturnValue(publicUser);
+    usersService.create.mockResolvedValue(publicUser);
 
     await expect(
       service.register({
@@ -67,7 +67,7 @@ describe('AuthService', () => {
   });
 
   it('returns a Bearer JWT and public user for valid credentials', async () => {
-    usersService.findInternalByEmail.mockReturnValue(user);
+    usersService.findInternalByEmail.mockResolvedValue(user);
     bcryptMock.compare.mockResolvedValue(true);
     configService.getOrThrow.mockReturnValue(3600);
     jwtService.signAsync.mockResolvedValue('access-token');
@@ -96,8 +96,8 @@ describe('AuthService', () => {
 
   it('uses the same generic error for an absent user and an incorrect password', async () => {
     usersService.findInternalByEmail
-      .mockReturnValueOnce(undefined)
-      .mockReturnValueOnce(user);
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(user);
     bcryptMock.compare.mockResolvedValue(false);
 
     const absent = service.login({

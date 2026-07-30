@@ -69,8 +69,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Obtém o usuário autenticado' })
   @ApiOkResponse({ type: PublicUserResponseDto })
   @ApiUnauthorizedResponse({ type: ErrorResponseDto })
-  me(@CurrentUser() claims: JwtClaims) {
-    const user = this.usersService.findPublicById(claims.sub);
+  async me(@CurrentUser() claims: JwtClaims) {
+    const user = await this.usersService.findPublicById(claims.sub);
     if (!user) {
       throw new UnauthorizedException('Não autorizado');
     }

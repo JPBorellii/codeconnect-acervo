@@ -25,7 +25,7 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<PublicUser> {
     const rounds = this.configService.getOrThrow<number>('BCRYPT_ROUNDS');
     const passwordHash = await bcrypt.hash(dto.password, rounds);
-    return this.usersService.create({
+    return await this.usersService.create({
       name: dto.name,
       email: dto.email,
       passwordHash,
@@ -33,7 +33,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<LoginResult> {
-    const user = this.usersService.findInternalByEmail(dto.email);
+    const user = await this.usersService.findInternalByEmail(dto.email);
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Credenciais inválidas');
     }

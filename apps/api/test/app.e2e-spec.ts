@@ -4,29 +4,41 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { createDatabaseConfig } from '../src/database/database.config';
 import dataSource from '../src/database/data-source';
 import { setupApp } from '../src/app.setup';
-import { UsersService } from '../src/users/users.service';
+import { UserEntity } from '../src/users/entities/user.entity';
 
 describe('Authentication (e2e)', () => {
   let app: INestApplication<App>;
-  let usersService: UsersService;
-
   beforeAll(async () => {
     await dataSource.initialize();
     await dataSource.runMigrations();
-    await dataSource.destroy();
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
     app = moduleFixture.createNestApplication();
     setupApp(app);
     await app.init();
-    usersService = app.get(UsersService);
   });
 
-  beforeEach(() => usersService.clearForTests());
-  afterAll(() => app?.close());
+  beforeEach(async () => {
+    const database = createDatabaseConfig(process.env);
+    if (
+      process.env.NODE_ENV !== 'test' ||
+      database.database !== 'codeconnect_test' ||
+      database.port !== 5433
+    ) {
+      throw new Error('Refusing to clear a non-test database');
+    }
+
+    await dataSource.getRepository(UserEntity).clear();
+  });
+
+  afterAll(async () => {
+    await app?.close();
+    await dataSource.destroy();
+  });
 
   const register = (body: object) =>
     request(app.getHttpServer()).post('/auth/register').send(body);
@@ -47,6 +59,14 @@ describe('Authentication (e2e)', () => {
     });
     expect(response.body).not.toHaveProperty('password');
     expect(response.body).not.toHaveProperty('passwordHash');
+    await expect(
+      dataSource.getRepository(UserEntity).findOneBy({
+        email: 'maria@example.com',
+      }),
+    ).resolves.toMatchObject({
+      name: 'Maria Silva',
+      email: 'maria@example.com',
+    });
   });
 
   it.each([
