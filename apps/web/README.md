@@ -2,6 +2,10 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
+## Autenticação
+
+O token de acesso é mantido provisoriamente em `sessionStorage`, limitado à aba atual. A migração recomendada é para cookie `Secure`, `HttpOnly`, `SameSite` e refresh token gerenciado pelo backend.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

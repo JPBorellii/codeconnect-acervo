@@ -7,4 +7,5 @@ expect.extend(toHaveNoViolations)
 
 afterEach(() => {
   cleanup()
+  window.sessionStorage.clear()
 })

@@ -15,7 +15,7 @@ function buildUrl(path: string) {
 
 function categoryForStatus(status: number): ApiErrorCategory {
   if (status === 400) return 'validation'
-  if (status === 401) return 'unauthorized'
+  if (status === 401 || status === 403) return 'unauthorized'
   if (status === 409) return 'conflict'
   return 'unknown'
 }
@@ -45,10 +45,12 @@ async function readJson(response: Response): Promise<unknown> {
 
 export async function apiClient<T>(
   path: string,
-  { body, headers, ...options }: ApiRequestOptions = {},
+  { body, headers, signal, ...options }: ApiRequestOptions = {},
 ): Promise<T> {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
+  const abortRequest = () => controller.abort()
+  signal?.addEventListener('abort', abortRequest, { once: true })
   const requestHeaders = new Headers(headers)
   const hasBody = body !== undefined
 
@@ -76,5 +78,6 @@ export async function apiClient<T>(
     throw new ApiError(messageFor('network'), 'network')
   } finally {
     window.clearTimeout(timeout)
+    signal?.removeEventListener('abort', abortRequest)
   }
 }

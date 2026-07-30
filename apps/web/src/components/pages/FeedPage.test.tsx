@@ -4,11 +4,12 @@ import { axe } from 'jest-axe'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FeedPage } from './FeedPage'
+import { AuthProvider } from '../../services/auth/AuthProvider'
 
 const post = { id: 'post-1', title: 'Post React', excerpt: 'Conteúdo sobre React e acessibilidade.', thumbnailUrl: null, author: { id: 'author-1', name: 'ana' }, commentCount: 3, likeCount: 5, createdAt: '2026-01-01T00:00:00.000Z' }
 const success = { items: [post], meta: { page: 1, limit: 12, total: 1, totalPages: 1 } }
 
-function renderPage() { return render(<MemoryRouter><FeedPage /></MemoryRouter>) }
+function renderPage() { return render(<MemoryRouter><AuthProvider><FeedPage /></AuthProvider></MemoryRouter>) }
 
 afterEach(() => vi.unstubAllGlobals())
 

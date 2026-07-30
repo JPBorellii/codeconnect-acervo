@@ -2,10 +2,18 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
+import { authStorage } from '../services/auth/auth-storage'
+import { authService } from '../services/auth/auth.service'
 import { AppRoutes } from './AppRoutes'
+
+vi.mock('../services/auth/auth.service', () => ({ authService: { getMe: vi.fn(), login: vi.fn() } }))
 
 function CurrentPath() {
   return <output aria-label="Rota atual">{useLocation().pathname}</output>
+}
+
+function CurrentState() {
+  return <output aria-label="Estado atual">{JSON.stringify(useLocation().state)}</output>
 }
 
 function renderRoutes(path: string) {
@@ -13,6 +21,7 @@ function renderRoutes(path: string) {
     <MemoryRouter initialEntries={[path]}>
       <AppRoutes />
       <CurrentPath />
+      <CurrentState />
     </MemoryRouter>,
   )
 }
@@ -48,5 +57,20 @@ describe('AppRoutes', () => {
     await user.click(screen.getByRole('link', { name: 'Faça seu login!' }))
     expect(screen.getByRole('heading', { name: 'Login' })).toBeVisible()
     expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
+  })
+
+  it('redirects visitors from protected routes and preserves their origin', async () => {
+    renderRoutes('/perfil')
+    expect(await screen.findByRole('heading', { name: 'Login' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
+    expect(screen.getByLabelText('Estado atual')).toHaveTextContent('/perfil')
+  })
+
+  it('renders a protected placeholder after restoring a valid session', async () => {
+    authStorage.setAccessToken('saved-token')
+    vi.mocked(authService.getMe).mockResolvedValue({ id: '1', name: 'Ada', email: 'ada@example.com', createdAt: '2026-01-01' })
+    renderRoutes('/publicar')
+    expect(await screen.findByRole('heading', { name: 'Publicar' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Voltar ao feed' })).toHaveAttribute('href', '/feed')
   })
 })
