@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { AppRoutes } from './AppRoutes'
 
 function CurrentPath() {
@@ -24,10 +24,11 @@ describe('AppRoutes', () => {
     expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
   })
 
-  it('redirects / to /login', () => {
+  it('redirects / to /feed', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } }))))
     renderRoutes('/')
-    expect(screen.getByRole('heading', { name: 'Login' })).toBeVisible()
-    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/login')
+    expect(await screen.findByRole('heading', { name: 'Feed público' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/feed')
   })
 
   it('renders CadastroPage at /cadastro', () => {
