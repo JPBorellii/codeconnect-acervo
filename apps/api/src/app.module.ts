@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { validate } from './config/env.validation';
 import { createTypeOrmOptions } from './database/database.config';
 import { UsersModule } from './users/users.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

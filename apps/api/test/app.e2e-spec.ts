@@ -1,6 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { OpenAPIObject } from '@nestjs/swagger';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
@@ -8,6 +10,8 @@ import { createDatabaseConfig } from '../src/database/database.config';
 import dataSource from '../src/database/data-source';
 import { setupApp } from '../src/app.setup';
 import { UserEntity } from '../src/users/entities/user.entity';
+import { PostEntity } from '../src/posts/entities/post.entity';
+import { randomUUID } from 'node:crypto';
 
 describe('Authentication (e2e)', () => {
   let app: INestApplication<App>;
@@ -32,7 +36,12 @@ describe('Authentication (e2e)', () => {
       throw new Error('Refusing to clear a non-test database');
     }
 
-    await dataSource.getRepository(UserEntity).clear();
+    await dataSource.getRepository(PostEntity).clear();
+    await dataSource
+      .getRepository(UserEntity)
+      .createQueryBuilder()
+      .delete()
+      .execute();
   });
 
   afterAll(async () => {
@@ -48,8 +57,53 @@ describe('Authentication (e2e)', () => {
     password: 'password123',
   };
 
+  async function createPost(overrides: Partial<PostEntity> = {}) {
+    const user = await register({
+      ...credentials,
+      email: `post-${randomUUID()}@example.com`,
+    }).expect(201);
+    const createdUser = user.body as unknown as { id: string };
+    return dataSource.getRepository(PostEntity).save({
+      id: randomUUID(),
+      authorId: createdUser.id,
+      title: 'React e TypeScript',
+      content: 'Conte\u00fado pesquis\u00e1vel sobre desenvolvimento frontend.',
+      thumbnailUrl: null,
+      ...overrides,
+    });
+  }
+
   it('preserves GET /', () =>
     request(app.getHttpServer()).get('/').expect(200).expect('Hello World!'));
+
+  it('documents only the public posts read endpoints without mojibake', () => {
+    const document: OpenAPIObject = SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder().addBearerAuth(undefined, 'bearer').build(),
+    );
+    expect(document.paths['/']?.get).toBeDefined();
+    expect(document.paths['/auth/register']?.post).toBeDefined();
+    expect(document.paths['/auth/login']?.post).toBeDefined();
+    expect(document.paths['/auth/me']?.get).toBeDefined();
+    expect(document.paths['/posts']?.get).toBeDefined();
+    expect(document.paths['/posts/{id}']?.get).toBeDefined();
+
+    expect(document.paths['/auth/me']?.get?.security).toEqual([{ bearer: [] }]);
+    expect(document.paths['/posts']?.get?.security ?? []).toHaveLength(0);
+    expect(document.paths['/posts/{id}']?.get?.security ?? []).toHaveLength(0);
+
+    expect(document.paths['/posts']?.post).toBeUndefined();
+
+    const paths = Object.keys(document.paths);
+
+    expect(paths.some((path) => path.includes('/comments'))).toBe(false);
+    expect(paths.some((path) => path.includes('/likes'))).toBe(false);
+
+    const serializedDocument = JSON.stringify(document);
+    const mojibakePattern = /[\u00c3\u00c2\ufffd]/u;
+
+    expect(serializedDocument).not.toMatch(mojibakePattern);
+  });
 
   it('registers normalized users without sensitive fields', async () => {
     const response = await register(credentials).expect(201);
@@ -80,7 +134,7 @@ describe('Authentication (e2e)', () => {
       .expect(400)
       .expect((response) =>
         expect((response.body as { message: string }).message).toBe(
-          'Dados de entrada inválidos',
+          'Dados de entrada inv\u00e1lidos',
         ),
       ),
   );
@@ -126,10 +180,10 @@ describe('Authentication (e2e)', () => {
       .send({ email: 'maria@example.com', password: 'wrongpass' })
       .expect(401);
     expect((missing.body as { message: string }).message).toBe(
-      'Credenciais inválidas',
+      'Credenciais inv\u00e1lidas',
     );
     expect((wrong.body as { message: string }).message).toBe(
-      'Credenciais inválidas',
+      'Credenciais inv\u00e1lidas',
     );
   });
 
@@ -167,5 +221,112 @@ describe('Authentication (e2e)', () => {
       .get('/auth/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(401);
+  });
+
+  it('lists public posts without a token using the default pagination contract', async () => {
+    await createPost();
+    const response = await request(app.getHttpServer())
+      .get('/posts')
+      .expect(200);
+    const body = response.body as unknown as {
+      items: Array<{
+        author: { name: string };
+        title: string;
+        commentCount: number;
+        likeCount: number;
+      }>;
+      meta: { page: number; limit: number; total: number; totalPages: number };
+    };
+    expect(body).toMatchObject({
+      meta: { page: 1, limit: 12, total: 1, totalPages: 1 },
+    });
+    expect(body.items[0]).toMatchObject({
+      title: 'React e TypeScript',
+      commentCount: 0,
+      likeCount: 0,
+      author: { name: 'Maria Silva' },
+    });
+    expect(body.items[0].author).not.toHaveProperty('email');
+    expect(body.items[0]).not.toHaveProperty('passwordHash');
+  });
+
+  it('paginates public posts with stable created_at and id ordering', async () => {
+    const createdAt = new Date('2026-02-01T00:00:00.000Z');
+    await createPost({
+      id: 'b0000000-0000-4000-8000-000000000001',
+      title: 'Primeiro',
+      createdAt,
+    });
+    await createPost({
+      id: 'b0000000-0000-4000-8000-000000000002',
+      title: 'Segundo',
+      createdAt,
+    });
+    const response = await request(app.getHttpServer())
+      .get('/posts?page=1&limit=1')
+      .expect(200);
+    const body = response.body as unknown as {
+      items: Array<{ id: string }>;
+      meta: unknown;
+    };
+    expect(body.meta).toEqual({
+      page: 1,
+      limit: 1,
+      total: 2,
+      totalPages: 2,
+    });
+    expect(body.items[0].id).toBe('b0000000-0000-4000-8000-000000000002');
+    await request(app.getHttpServer())
+      .get('/posts?page=3&limit=1')
+      .expect(200)
+      .expect({
+        items: [],
+        meta: { page: 3, limit: 1, total: 2, totalPages: 2 },
+      });
+  });
+
+  it('searches title and content safely through PostgreSQL full-text search', async () => {
+    await createPost({
+      title: 'Guia de React',
+      content: 'Aprenda observabilidade em aplica\u00e7\u00f5es.',
+    });
+    const response = await request(app.getHttpServer())
+      .get('/posts?q=React')
+      .expect(200);
+    const body = response.body as unknown as { items: unknown[] };
+    expect(body.items).toHaveLength(1);
+    const contentResponse = await request(app.getHttpServer())
+      .get('/posts?q=observabilidade')
+      .expect(200);
+    const contentBody = contentResponse.body as unknown as { items: unknown[] };
+    expect(contentBody.items).toHaveLength(1);
+    await request(app.getHttpServer())
+      .get('/posts?q=%22%20%7C%20%26')
+      .expect(200);
+  });
+
+  it('returns public details and validates absent or invalid posts', async () => {
+    const post = await createPost();
+    const response = await request(app.getHttpServer())
+      .get(`/posts/${post.id}`)
+      .expect(200);
+    const body = response.body as unknown as {
+      author: object;
+      id: string;
+      content: string;
+      commentCount: number;
+      likeCount: number;
+    };
+    expect(body).toMatchObject({
+      id: post.id,
+      content: post.content,
+      commentCount: 0,
+      likeCount: 0,
+    });
+    expect(body.author).not.toHaveProperty('email');
+    await request(app.getHttpServer())
+      .get(`/posts/${randomUUID()}`)
+      .expect(404);
+    await request(app.getHttpServer()).get('/posts/not-a-uuid').expect(400);
   });
 });

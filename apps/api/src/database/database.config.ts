@@ -2,6 +2,8 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { existsSync, readFileSync } from 'node:fs';
 import { DataSourceOptions } from 'typeorm';
 import { CreateUsers1785312000000 } from './migrations/1785312000000-CreateUsers';
+import { CreatePosts1785398400000 } from './migrations/1785398400000-CreatePosts';
+import { PostEntity } from '../posts/entities/post.entity';
 import { UserEntity } from '../users/entities/user.entity';
 
 export interface DatabaseConfig {
@@ -90,7 +92,7 @@ export function createTypeOrmOptions(
     retryAttempts: 5,
     retryDelay: 3000,
     connectTimeoutMS: 5000,
-    entities: [UserEntity],
-    migrations: [CreateUsers1785312000000],
+    entities: [UserEntity, PostEntity],
+    migrations: [CreateUsers1785312000000, CreatePosts1785398400000],
   };
 }
