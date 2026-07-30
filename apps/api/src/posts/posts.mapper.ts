@@ -24,8 +24,8 @@ export function toPostSummary(row: PostQueryRow): PostSummary {
     excerpt: createExcerpt(row.post_content),
     thumbnailUrl: row.post_thumbnail_url,
     author: authorFor(row),
-    commentCount: 0,
-    likeCount: 0,
+    commentCount: Number(row.post_comment_count),
+    likeCount: Number(row.post_like_count),
     createdAt: createdAtFor(row),
   };
 }
@@ -37,8 +37,8 @@ export function toPostDetail(row: PostQueryRow): PostDetail {
     content: row.post_content,
     thumbnailUrl: row.post_thumbnail_url,
     author: authorFor(row),
-    commentCount: 0,
-    likeCount: 0,
+    commentCount: Number(row.post_comment_count),
+    likeCount: Number(row.post_like_count),
     createdAt: createdAtFor(row),
   };
 }

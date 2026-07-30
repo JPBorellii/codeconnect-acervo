@@ -5,12 +5,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import request from 'supertest';
 import { App } from 'supertest/types';
+import type { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { createDatabaseConfig } from '../src/database/database.config';
 import dataSource from '../src/database/data-source';
 import { setupApp } from '../src/app.setup';
 import { UserEntity } from '../src/users/entities/user.entity';
 import { PostEntity } from '../src/posts/entities/post.entity';
+import { CommentEntity } from '../src/posts/entities/comment.entity';
+import { PostLikeEntity } from '../src/posts/entities/post-like.entity';
 import { randomUUID } from 'node:crypto';
 
 describe('Authentication (e2e)', () => {
@@ -36,7 +39,21 @@ describe('Authentication (e2e)', () => {
       throw new Error('Refusing to clear a non-test database');
     }
 
-    await dataSource.getRepository(PostEntity).clear();
+    await dataSource
+      .getRepository(PostLikeEntity)
+      .createQueryBuilder()
+      .delete()
+      .execute();
+    await dataSource
+      .getRepository(CommentEntity)
+      .createQueryBuilder()
+      .delete()
+      .execute();
+    await dataSource
+      .getRepository(PostEntity)
+      .createQueryBuilder()
+      .delete()
+      .execute();
     await dataSource
       .getRepository(UserEntity)
       .createQueryBuilder()
@@ -76,7 +93,7 @@ describe('Authentication (e2e)', () => {
   it('preserves GET /', () =>
     request(app.getHttpServer()).get('/').expect(200).expect('Hello World!'));
 
-  it('documents only the public posts read endpoints without mojibake', () => {
+  it('documents post interaction endpoints without mojibake', () => {
     const document: OpenAPIObject = SwaggerModule.createDocument(
       app,
       new DocumentBuilder().addBearerAuth(undefined, 'bearer').build(),
@@ -87,22 +104,235 @@ describe('Authentication (e2e)', () => {
     expect(document.paths['/auth/me']?.get).toBeDefined();
     expect(document.paths['/posts']?.get).toBeDefined();
     expect(document.paths['/posts/{id}']?.get).toBeDefined();
+    expect(document.paths['/posts']?.post).toBeDefined();
+    expect(document.paths['/posts/{id}/comments']?.get).toBeDefined();
+    expect(document.paths['/posts/{id}/comments']?.post).toBeDefined();
+    expect(document.paths['/posts/{id}/like']?.get).toBeDefined();
+    expect(document.paths['/posts/{id}/like']?.put).toBeDefined();
+    expect(document.paths['/posts/{id}/like']?.delete).toBeDefined();
 
     expect(document.paths['/auth/me']?.get?.security).toEqual([{ bearer: [] }]);
     expect(document.paths['/posts']?.get?.security ?? []).toHaveLength(0);
     expect(document.paths['/posts/{id}']?.get?.security ?? []).toHaveLength(0);
 
-    expect(document.paths['/posts']?.post).toBeUndefined();
-
-    const paths = Object.keys(document.paths);
-
-    expect(paths.some((path) => path.includes('/comments'))).toBe(false);
-    expect(paths.some((path) => path.includes('/likes'))).toBe(false);
+    expect(document.paths['/posts']?.post?.security).toEqual([{ bearer: [] }]);
+    expect(
+      document.paths['/posts/{id}/comments']?.get?.security ?? [],
+    ).toHaveLength(0);
+    expect(document.paths['/posts/{id}/comments']?.post?.security).toEqual([
+      { bearer: [] },
+    ]);
+    expect(document.paths['/posts/{id}/like']?.put?.security).toEqual([
+      { bearer: [] },
+    ]);
 
     const serializedDocument = JSON.stringify(document);
     const mojibakePattern = /[\u00c3\u00c2\ufffd]/u;
 
     expect(serializedDocument).not.toMatch(mojibakePattern);
+  });
+
+  async function authenticatedUser() {
+    const response = await register({
+      ...credentials,
+      email: `auth-${randomUUID()}@example.com`,
+    }).expect(201);
+    const registeredUser = response.body as {
+      id: string;
+      name: string;
+      email: string;
+    };
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: registeredUser.email, password: credentials.password })
+      .expect(200);
+    return {
+      user: registeredUser,
+      token: (login.body as { accessToken: string }).accessToken,
+    };
+  }
+
+  it('creates posts only from the authenticated author', async () => {
+    const { user, token } = await authenticatedUser();
+    await request(app.getHttpServer())
+      .post('/posts')
+      .send({ title: 'Novo post', content: 'Conteúdo criado' })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/posts')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: '  Novo post  ',
+        content: '  Conteúdo criado  ',
+        authorId: randomUUID(),
+      })
+      .expect(400);
+    const created = await request(app.getHttpServer())
+      .post('/posts')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '  Novo post  ', content: '  Conteúdo criado  ' })
+      .expect(201);
+    expect(created.body).toMatchObject({
+      title: 'Novo post',
+      content: 'Conteúdo criado',
+      author: { id: user.id },
+      commentCount: 0,
+      likeCount: 0,
+    });
+    expect(created.body).not.toHaveProperty('email');
+    expect(created.body).not.toHaveProperty('passwordHash');
+  });
+
+  it('handles public comments and idempotent likes', async () => {
+    const post = await createPost();
+    const { user, token } = await authenticatedUser();
+    await request(app.getHttpServer())
+      .get(`/posts/${randomUUID()}/comments`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .send({ content: 'Olá' })
+      .expect(401);
+    const comment = await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: '  Comentário público  ' })
+      .expect(201);
+    const publicComment = comment.body as {
+      author: { id: string; name: string; email?: string };
+      content: string;
+    };
+    expect(publicComment).toMatchObject({
+      content: 'Comentário público',
+      author: { id: user.id, name: user.name },
+    });
+    expect(publicComment).not.toHaveProperty('authorId');
+    expect(publicComment.author).not.toHaveProperty('email');
+    await request(app.getHttpServer())
+      .get(`/posts/${post.id}/comments?page=1&limit=1`)
+      .expect(200)
+      .expect((response: Response) =>
+        expect((response.body as { items: unknown[] }).items).toHaveLength(1),
+      );
+    await request(app.getHttpServer())
+      .get(`/posts/${post.id}/like`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .put(`/posts/${post.id}/like`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .delete(`/posts/${post.id}/like`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .put(`/posts/${post.id}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ liked: true, likeCount: 1 });
+    await request(app.getHttpServer())
+      .put(`/posts/${post.id}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ liked: true, likeCount: 1 });
+    await request(app.getHttpServer())
+      .delete(`/posts/${post.id}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ liked: false, likeCount: 0 });
+    await request(app.getHttpServer())
+      .delete(`/posts/${post.id}/like`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({ liked: false, likeCount: 0 });
+  });
+
+  it('keeps comment ordering, counts, and concurrent likes consistent', async () => {
+    const post = await createPost();
+    const { token } = await authenticatedUser();
+    const authorization = { Authorization: `Bearer ${token}` };
+
+    await request(app.getHttpServer())
+      .get('/posts/not-a-uuid/comments')
+      .expect(400);
+    await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .set(authorization)
+      .send({ content: '   ' })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .set(authorization)
+      .send({
+        content: 'Primeiro',
+        authorId: randomUUID(),
+        postId: randomUUID(),
+      })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .set(authorization)
+      .send({ content: 'Primeiro' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(`/posts/${post.id}/comments`)
+      .set(authorization)
+      .send({ content: 'Segundo' })
+      .expect(201);
+
+    const comments = await request(app.getHttpServer())
+      .get(`/posts/${post.id}/comments?page=1&limit=2`)
+      .expect(200);
+    const commentItems = (
+      comments.body as { items: Array<{ content: string }> }
+    ).items;
+    expect(commentItems.map(({ content }) => content)).toEqual([
+      'Primeiro',
+      'Segundo',
+    ]);
+
+    await request(app.getHttpServer())
+      .get(`/posts/${post.id}/like`)
+      .set(authorization)
+      .expect(200)
+      .expect({ liked: false, likeCount: 0 });
+    const likeResponses = await Promise.all([
+      request(app.getHttpServer())
+        .put(`/posts/${post.id}/like`)
+        .set(authorization),
+      request(app.getHttpServer())
+        .put(`/posts/${post.id}/like`)
+        .set(authorization),
+    ]);
+    for (const response of likeResponses) {
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ liked: true, likeCount: 1 });
+    }
+    await expect(
+      dataSource.getRepository(PostLikeEntity).countBy({ postId: post.id }),
+    ).resolves.toBe(1);
+    await request(app.getHttpServer())
+      .get('/posts/not-a-uuid/like')
+      .set(authorization)
+      .expect(400);
+    await request(app.getHttpServer())
+      .put(`/posts/${randomUUID()}/like`)
+      .set(authorization)
+      .expect(404);
+
+    const list = await request(app.getHttpServer()).get('/posts').expect(200);
+    const summary = (
+      list.body as {
+        items: Array<{ id: string; commentCount: unknown; likeCount: unknown }>;
+      }
+    ).items.find(({ id }) => id === post.id);
+    expect(summary).toMatchObject({ commentCount: 2, likeCount: 1 });
+    expect(typeof summary?.commentCount).toBe('number');
+    expect(typeof summary?.likeCount).toBe('number');
+    const detail = await request(app.getHttpServer())
+      .get(`/posts/${post.id}`)
+      .expect(200);
+    expect(
+      detail.body as { commentCount: unknown; likeCount: unknown },
+    ).toMatchObject({ commentCount: 2, likeCount: 1 });
   });
 
   it('registers normalized users without sensitive fields', async () => {

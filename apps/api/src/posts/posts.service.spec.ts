@@ -14,6 +14,8 @@ const row = {
   post_created_at: '2026-01-01T00:00:00.000Z',
   author_id: 'a0000000-0000-4000-8000-000000000001',
   author_name: 'Ada Exemplo',
+  post_comment_count: 0,
+  post_like_count: 0,
 };
 
 describe('PostsService', () => {

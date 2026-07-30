@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'node:crypto';
 import { Repository, SelectQueryBuilder } from 'typeorm';
+import { CreatePostDto } from './dto/create-post.dto';
 import { ListPostsQueryDto } from './dto/list-posts-query.dto';
 import { PostEntity } from './entities/post.entity';
 import { toPostDetail, toPostSummary } from './posts.mapper';
@@ -43,6 +45,19 @@ export class PostsService {
     return toPostDetail(row);
   }
 
+  async create(authorId: string, dto: CreatePostDto): Promise<PostDetail> {
+    const post = await this.postsRepository.save(
+      this.postsRepository.create({
+        id: randomUUID(),
+        authorId,
+        title: dto.title,
+        content: dto.content,
+        thumbnailUrl: dto.thumbnailUrl ?? null,
+      }),
+    );
+    return this.findDetail(post.id);
+  }
+
   private createPublicQuery(): SelectQueryBuilder<PostEntity> {
     return this.postsRepository
       .createQueryBuilder('post')
@@ -55,6 +70,8 @@ export class PostsService {
         'post.created_at AS post_created_at',
         'author.id AS author_id',
         'author.name AS author_name',
+        'COALESCE((SELECT COUNT(*) FROM comments WHERE comments.post_id = post.id), 0) AS post_comment_count',
+        'COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_likes.post_id = post.id), 0) AS post_like_count',
       ]);
   }
 

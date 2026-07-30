@@ -31,4 +31,6 @@ export interface PostQueryRow {
   post_created_at: Date | string;
   author_id: string;
   author_name: string;
+  post_comment_count: string | number;
+  post_like_count: string | number;
 }
