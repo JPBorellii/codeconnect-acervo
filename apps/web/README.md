@@ -1,36 +1,20 @@
-# React + TypeScript + Vite
+# CodeConnect Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend React, TypeScript e Vite da CodeConnect. A aplicação usa `AuthProvider`, cliente `fetch` centralizado e proxy `/api` para `http://localhost:3000` no desenvolvimento.
 
-## Autenticação
+## Rotas
 
-O token de acesso é mantido provisoriamente em `sessionStorage`, limitado à aba atual. A migração recomendada é para cookie `Secure`, `HttpOnly`, `SameSite` e refresh token gerenciado pelo backend.
+Públicas: `/feed`, `/login`, `/cadastro` e `/posts/:id`. Protegidas: `/publicar` e `/perfil` (placeholder). O feed, detalhes, comentários, curtidas, compartilhamento e publicação usam contratos da API; componentes nunca recebem token diretamente.
 
-Currently, two official plugins are available:
+## Comandos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+pnpm.cmd web:dev
+pnpm.cmd web:lint
+pnpm.cmd web:test
+pnpm.cmd web:build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`VITE_API_URL` usa a configuração atual do cliente; autenticação provisória é centralizada em `sessionStorage`. Os testes incluem acessibilidade com jest-axe e as páginas mantêm labels, foco visível e mensagens acessíveis.
+
+As imagens em `docs/design/references/codeconnect` são referências de desenvolvimento e nunca devem ser importadas para o bundle ou `public`.
