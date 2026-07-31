@@ -30,7 +30,7 @@ export function FeedNavigation() {
   const { isAuthenticated, logout } = useAuth()
   const items = navigationEntries(isAuthenticated).map((entry) => {
     if (entry.label === 'Sair') return <button className="feed-nav-item" key={entry.label} onClick={logout} type="button"><NavigationIcon name="login" />Sair</button>
-    if (entry.to) return <Link aria-current={location.pathname === '/feed' && entry.label === 'Feed' ? 'page' : undefined} className="feed-nav-item" key={entry.label} state={!isAuthenticated && entry.to === '/login' ? { from: `${location.pathname}${location.search}${location.hash}` } : undefined} to={entry.to}><NavigationIcon name={entry.icon} />{entry.label}</Link>
+    if (entry.to) return <Link aria-current={location.pathname === entry.to ? 'page' : undefined} className="feed-nav-item" key={entry.label} state={!isAuthenticated && entry.to === '/login' ? { from: `${location.pathname}${location.search}${location.hash}` } : undefined} to={entry.to}><NavigationIcon name={entry.icon} />{entry.label}</Link>
     return <span aria-disabled="true" className="feed-nav-item cursor-default" key={entry.label} tabIndex={0}><NavigationIcon name={entry.icon} />{entry.label}</span>
   })
   const publishPath = isAuthenticated ? '/publicar' : '/login'

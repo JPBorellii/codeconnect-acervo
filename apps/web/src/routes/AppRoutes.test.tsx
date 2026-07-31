@@ -73,4 +73,13 @@ describe('AppRoutes', () => {
     expect(await screen.findByRole('heading', { name: 'Nova publicação' })).toBeVisible()
     expect(screen.getByRole('textbox', { name: 'Título da publicação *' })).toBeVisible()
   })
+
+  it('renders the profile page after restoring a valid session', async () => {
+    authStorage.setAccessToken('saved-token')
+    vi.mocked(authService.getMe).mockResolvedValue({ id: '1', name: 'Ada', email: 'ada@example.com', createdAt: '2026-01-01' })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ items: [], meta: { page: 1, limit: 12, total: 0, totalPages: 0 } }), { headers: { 'content-type': 'application/json' } })))
+    renderRoutes('/perfil')
+    expect(await screen.findByRole('heading', { name: 'Ada' })).toBeVisible()
+    expect(fetch).toHaveBeenCalledWith('/api/profile/me/posts?page=1&limit=12', expect.any(Object))
+  })
 })

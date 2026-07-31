@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import type { PostSummary } from '../../features/feed/feed.types'
 
-type PostCardProps = { post: PostSummary }
+type PostCardProps = { post: PostSummary; showAuthor?: boolean }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, showAuthor = true }: PostCardProps) {
   const [imageFailed, setImageFailed] = useState(false)
   const canShowImage = Boolean(post.thumbnailUrl) && !imageFailed
 
@@ -25,7 +25,7 @@ export function PostCard({ post }: PostCardProps) {
             <span aria-hidden="true">♡ {post.likeCount}</span>
             <span aria-hidden="true">▣ {post.commentCount}</span>
           </div>
-          <span className="max-w-36 truncate font-medium">@{post.author.name}</span>
+          {showAuthor ? <span className="max-w-36 truncate font-medium">@{post.author.name}</span> : null}
         </footer>
         <Link className="mt-4 w-fit text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent" to={`/posts/${post.id}`}>Ver publicação</Link>
       </div>
