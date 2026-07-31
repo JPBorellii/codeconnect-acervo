@@ -24,6 +24,7 @@ describe('PostsService', () => {
     innerJoin: jest.Mock;
     select: jest.Mock;
     where: jest.Mock;
+    andWhere: jest.Mock;
     orderBy: jest.Mock;
     addOrderBy: jest.Mock;
     clone: jest.Mock;
@@ -40,6 +41,7 @@ describe('PostsService', () => {
       innerJoin: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       addOrderBy: jest.fn().mockReturnThis(),
       clone: jest.fn(),
@@ -89,6 +91,33 @@ describe('PostsService', () => {
       items: [],
       meta: { page: 3, limit: 5, total: 0, totalPages: 0 },
     });
+  });
+
+  it('lists only an author posts with the public pagination contract', async () => {
+    const authorId = 'a0000000-0000-4000-8000-000000000001';
+    await expect(
+      service.listByAuthorId(
+        authorId,
+        Object.assign(new ListPostsQueryDto(), { page: 2, limit: 5 }),
+      ),
+    ).resolves.toMatchObject({
+      items: [
+        {
+          author: { id: authorId, name: row.author_name },
+          commentCount: 0,
+          likeCount: 0,
+        },
+      ],
+      meta: { page: 2, limit: 5, total: 1, totalPages: 1 },
+    });
+    expect(builder.andWhere).toHaveBeenCalledWith(
+      'post.author_id = :authorId',
+      {
+        authorId,
+      },
+    );
+    expect(builder.orderBy).toHaveBeenCalledWith('post.created_at', 'DESC');
+    expect(builder.addOrderBy).toHaveBeenCalledWith('post.id', 'DESC');
   });
 
   it('binds search text as a parameter instead of interpolating it', async () => {

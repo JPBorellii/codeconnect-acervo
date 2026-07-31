@@ -8,6 +8,7 @@ import { validate } from './config/env.validation';
 import { createTypeOrmOptions } from './database/database.config';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PostsModule } from './posts/posts.module';
     UsersModule,
     AuthModule,
     PostsModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

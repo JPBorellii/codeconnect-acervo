@@ -102,6 +102,7 @@ describe('Authentication (e2e)', () => {
     expect(document.paths['/auth/register']?.post).toBeDefined();
     expect(document.paths['/auth/login']?.post).toBeDefined();
     expect(document.paths['/auth/me']?.get).toBeDefined();
+    expect(document.paths['/profile/me/posts']?.get).toBeDefined();
     expect(document.paths['/posts']?.get).toBeDefined();
     expect(document.paths['/posts/{id}']?.get).toBeDefined();
     expect(document.paths['/posts']?.post).toBeDefined();
@@ -112,6 +113,9 @@ describe('Authentication (e2e)', () => {
     expect(document.paths['/posts/{id}/like']?.delete).toBeDefined();
 
     expect(document.paths['/auth/me']?.get?.security).toEqual([{ bearer: [] }]);
+    expect(document.paths['/profile/me/posts']?.get?.security).toEqual([
+      { bearer: [] },
+    ]);
     expect(document.paths['/posts']?.get?.security ?? []).toHaveLength(0);
     expect(document.paths['/posts/{id}']?.get?.security ?? []).toHaveLength(0);
 
@@ -125,6 +129,20 @@ describe('Authentication (e2e)', () => {
     expect(document.paths['/posts/{id}/like']?.put?.security).toEqual([
       { bearer: [] },
     ]);
+    const profileParameters = JSON.stringify(
+      document.paths['/profile/me/posts']?.get?.parameters,
+    );
+    expect(profileParameters).toContain('"name":"page"');
+    expect(profileParameters).toContain('"name":"limit"');
+    expect(document.paths['/profile/me']?.get).toBeUndefined();
+    expect(
+      document.components?.schemas?.ProfilePostSummaryResponseDto,
+    ).toBeDefined();
+    expect(
+      JSON.stringify(
+        document.components?.schemas?.ProfilePostSummaryResponseDto,
+      ),
+    ).not.toMatch(/email|passwordHash|token/iu);
 
     const serializedDocument = JSON.stringify(document);
     const mojibakePattern = /[\u00c3\u00c2\ufffd]/u;
@@ -512,6 +530,114 @@ describe('Authentication (e2e)', () => {
       .expect({
         items: [],
         meta: { page: 3, limit: 1, total: 2, totalPages: 2 },
+      });
+  });
+
+  it('lists only the authenticated user posts with protected pagination', async () => {
+    const userA = await authenticatedUser();
+    const userB = await authenticatedUser();
+    const createdAt = new Date('2026-03-01T00:00:00.000Z');
+    const userAPosts = await dataSource.getRepository(PostEntity).save([
+      {
+        id: 'b0000000-0000-4000-8000-000000000011',
+        authorId: userA.user.id,
+        title: 'Post A antigo',
+        content: 'ConteÃºdo A antigo',
+        thumbnailUrl: null,
+        createdAt,
+      },
+      {
+        id: 'b0000000-0000-4000-8000-000000000012',
+        authorId: userA.user.id,
+        title: 'Post A recente',
+        content: 'ConteÃºdo A recente',
+        thumbnailUrl: null,
+        createdAt,
+      },
+    ]);
+    await dataSource.getRepository(PostEntity).save({
+      id: 'b0000000-0000-4000-8000-000000000013',
+      authorId: userB.user.id,
+      title: 'Post B',
+      content: 'ConteÃºdo B',
+      thumbnailUrl: null,
+      createdAt,
+    });
+
+    await request(app.getHttpServer()).get('/profile/me/posts').expect(401);
+    await request(app.getHttpServer())
+      .get('/profile/me/posts')
+      .set('Authorization', 'Bearer malformed.token')
+      .expect(401);
+    await request(app.getHttpServer())
+      .get('/profile/me/posts?page=0')
+      .set('Authorization', `Bearer ${userA.token}`)
+      .expect(400);
+    await request(app.getHttpServer())
+      .get('/profile/me/posts?limit=51')
+      .set('Authorization', `Bearer ${userA.token}`)
+      .expect(400);
+    await request(app.getHttpServer())
+      .get(`/profile/me/posts?authorId=${userB.user.id}`)
+      .set('Authorization', `Bearer ${userA.token}`)
+      .expect(400);
+
+    const firstPage = await request(app.getHttpServer())
+      .get('/profile/me/posts?page=1&limit=1')
+      .set('Authorization', `Bearer ${userA.token}`)
+      .expect(200);
+    const firstBody = firstPage.body as {
+      items: Array<{
+        id: string;
+        author: { id: string; name: string; email?: string };
+        commentCount: unknown;
+        likeCount: unknown;
+        passwordHash?: string;
+        token?: string;
+      }>;
+      meta: { page: number; limit: number; total: number; totalPages: number };
+    };
+    expect(firstBody.meta).toEqual({
+      page: 1,
+      limit: 1,
+      total: 2,
+      totalPages: 2,
+    });
+    expect(firstBody.items[0]?.id).toBe(userAPosts[1]?.id);
+    expect(firstBody.items[0]?.author).toEqual({
+      id: userA.user.id,
+      name: userA.user.name,
+    });
+    expect(typeof firstBody.items[0]?.commentCount).toBe('number');
+    expect(typeof firstBody.items[0]?.likeCount).toBe('number');
+    expect(firstBody.items[0]).not.toHaveProperty('passwordHash');
+    expect(firstBody.items[0]).not.toHaveProperty('token');
+    expect(firstBody.items[0]?.author).not.toHaveProperty('email');
+    expect(firstPage.headers['cache-control']).toContain('no-store');
+
+    const userBPosts = await request(app.getHttpServer())
+      .get('/profile/me/posts')
+      .set('Authorization', `Bearer ${userB.token}`)
+      .expect(200);
+    const userBItems = (
+      userBPosts.body as {
+        items: Array<{ author: { id: string; name: string } }>;
+      }
+    ).items;
+    expect(userBItems).toHaveLength(1);
+    expect(userBItems[0]?.author).toEqual({
+      id: userB.user.id,
+      name: userB.user.name,
+    });
+
+    const noPostsUser = await authenticatedUser();
+    await request(app.getHttpServer())
+      .get('/profile/me/posts')
+      .set('Authorization', `Bearer ${noPostsUser.token}`)
+      .expect(200)
+      .expect({
+        items: [],
+        meta: { page: 1, limit: 12, total: 0, totalPages: 0 },
       });
   });
 

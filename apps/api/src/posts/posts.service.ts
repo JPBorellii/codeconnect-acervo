@@ -19,8 +19,25 @@ export class PostsService {
   ) {}
 
   async list(query: ListPostsQueryDto): Promise<PaginatedPosts> {
+    return this.listWithAuthor(query);
+  }
+
+  async listByAuthorId(
+    authorId: string,
+    query: ListPostsQueryDto,
+  ): Promise<PaginatedPosts> {
+    return this.listWithAuthor(query, authorId);
+  }
+
+  private async listWithAuthor(
+    query: ListPostsQueryDto,
+    authorId?: string,
+  ): Promise<PaginatedPosts> {
     const builder = this.createPublicQuery();
     this.applySearch(builder, query.q);
+    if (authorId) {
+      builder.andWhere('post.author_id = :authorId', { authorId });
+    }
     const total = await builder.clone().getCount();
     const rows = await builder
       .offset((query.page - 1) * query.limit)
