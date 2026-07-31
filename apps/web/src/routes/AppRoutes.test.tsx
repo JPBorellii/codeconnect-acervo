@@ -46,6 +46,12 @@ describe('AppRoutes', () => {
     expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/cadastro')
   })
 
+  it('renders the public about page without requesting a session or redirecting', () => {
+    renderRoutes('/sobre')
+    expect(screen.getByRole('heading', { name: 'Projetos, pessoas e ideias em conexão.' })).toBeVisible()
+    expect(screen.getByLabelText('Rota atual')).toHaveTextContent('/sobre')
+  })
+
   it('navigates from login to cadastro and back to login', async () => {
     const user = userEvent.setup()
     renderRoutes('/login')

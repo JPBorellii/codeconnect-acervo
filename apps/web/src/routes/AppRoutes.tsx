@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { CadastroPage } from '../components/pages/CadastroPage'
+import { AboutPage } from '../components/pages/AboutPage'
 import { FeedPage } from '../components/pages/FeedPage'
 import { LoginPage } from '../components/pages/LoginPage'
 import { ProfilePage } from '../components/pages/ProfilePage'
@@ -14,6 +15,7 @@ export function AppRoutes() {
     <Route element={<FeedPage />} path="/feed" />
     <Route element={<PostDetailsPage />} path="/posts/:id" />
     <Route element={<CadastroPage />} path="/cadastro" />
+    <Route element={<AboutPage />} path="/sobre" />
     <Route element={<LoginPage />} path="/login" />
     <Route element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} path="/perfil" />
     <Route element={<ProtectedRoute><PublishPage /></ProtectedRoute>} path="/publicar" />

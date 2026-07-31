@@ -20,7 +20,7 @@ function navigationEntries(isAuthenticated: boolean): NavigationEntry[] {
   return [
     { icon: 'feed', label: 'Feed', to: '/feed' },
     { icon: 'profile', label: 'Perfil', to: isAuthenticated ? '/perfil' : '/login' },
-    { icon: 'about', label: 'Sobre nós' },
+    { icon: 'about', label: 'Sobre nós', to: '/sobre' },
     { icon: 'login', label: isAuthenticated ? 'Sair' : 'Entrar', to: isAuthenticated ? undefined : '/login' },
   ]
 }
