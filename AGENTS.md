@@ -63,16 +63,16 @@ Global design tokens belong in the `@theme` block of `apps/web/src/index.css`. N
 
 ## Testing Guidelines
 
-Jest and `ts-jest` cover the API. Name colocated unit tests `*.spec.ts` and end-to-end tests `*.e2e-spec.ts`. Add tests for new routes, service behavior, and regressions. There is currently no frontend test runner; at minimum, run `pnpm web:build` and manually verify affected UI behavior.
+Jest and `ts-jest` cover the API. Name colocated unit tests `*.spec.ts` and end-to-end tests `*.e2e-spec.ts`. Add tests for new routes, service behavior, and regressions. The frontend suite uses Vitest, React Testing Library, and jest-axe; run `pnpm.cmd web:test` alongside the relevant lint and build commands and manual verification for affected UI behavior.
 
-Do not install frontend test dependencies without explicit authorization. Until Vitest and React Testing Library are installed, validate frontend changes with the relevant lint and build commands plus manual verification. Once both tools are available, every new component must have a co-located test:
+Every new frontend component must have a co-located test:
 
 ```text
 ComponentName.tsx
 ComponentName.test.tsx
 ```
 
-Frontend component tests should cover essential usage, rendering, the primary interaction, and accessibility when applicable. Aim for meaningful risk-based coverage; 100% coverage is not required.
+Frontend component tests should cover essential usage, rendering, the primary interaction, and accessibility when applicable. Aim for meaningful risk-based coverage; 100% coverage is not required. Public routes include `/feed`, `/login`, `/cadastro`, `/posts/:id`, and `/sobre`; `/publicar` and `/perfil` require authentication.
 
 ## Backend REST Conventions
 
